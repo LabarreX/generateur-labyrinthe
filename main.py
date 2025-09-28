@@ -7,7 +7,7 @@ labyrinthe = None
 
 @app.route('/')
 def index():
-    return render_template('/index.html', maze=None, solved=False)
+    return render_template('index.html', maze=None, solved=False)
 
 @app.route('/generate', methods=['POST'])
 def generate():
@@ -16,24 +16,25 @@ def generate():
     height = int(request.form['height'])
     labyrinthe = Labyrinthe(width, height)
     labyrinthe.generer_fusion()
-    texte = labyrinthe.afficher(terminal=False)
-    return render_template('index.html', maze=texte, solved=False)
+
+    svg_maze = labyrinthe.generate_svg(solved=False, width=width*25, height=height*25)
+    return render_template('index.html', maze=svg_maze, solved=False)
 
 @app.route('/show_answer', methods=['POST'])
 def show_answer():
     global labyrinthe
     if labyrinthe:
         labyrinthe.solve()
-        texte = labyrinthe.afficher(solved=True, terminal=False)
-        return render_template('index.html', maze=texte, solved=True)
+        svg_maze = labyrinthe.generate_svg(solved=True, width=labyrinthe.largeur*25, height=labyrinthe.hauteur*25)
+        return render_template('index.html', maze=svg_maze, solved=True)
     return redirect(url_for('index'))
 
 @app.route('/hide_answer', methods=['POST'])
 def hide_answer():
     global labyrinthe
     if labyrinthe:
-        texte = labyrinthe.afficher(solved=False, terminal=False)
-        return render_template('index.html', maze=texte, solved=False)
+        svg_maze = labyrinthe.generate_svg(solved=False, width=labyrinthe.largeur*25, height=labyrinthe.hauteur*25)
+        return render_template('index.html', maze=svg_maze, solved=False)
     return redirect(url_for('index'))
 
 @app.route('/download', methods=['POST'])
@@ -62,7 +63,7 @@ def download():
         # Générer le PDF en mémoire
         pdf_data = labyrinthe.generate_pdf_bytes(basic=basic, with_solved=with_solved)
         
-        filename = f'labyrinthe_{labyrinthe.largeur}x{labyrinthe.hauteur}{content_suffix}.pdf'
+        filename = f'labyrinthe {labyrinthe.largeur}x{labyrinthe.hauteur}{content_suffix}.pdf'
         
         # Créer la réponse avec le fichier PDF
         response = make_response(pdf_data)
@@ -74,7 +75,7 @@ def download():
         # Générer le document Word en mémoire
         word_data = labyrinthe.generate_word_bytes(basic=basic, with_solved=with_solved)
         
-        filename = f'labyrinthe_{labyrinthe.largeur}x{labyrinthe.hauteur}{content_suffix}.docx'
+        filename = f'labyrinthe {labyrinthe.largeur}x{labyrinthe.hauteur}{content_suffix}.docx'
         
         # Créer la réponse avec le fichier Word
         response = make_response(word_data)
