@@ -1,94 +1,543 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
-    <title>Générateur aléatoire de labyrinthes</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Générateur de Labyrinthes</title>
     <style>
+        /* Reset et base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        h1 {
+            font-family: system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
             color: #333;
+            background: #fafafa;
+            margin: 0;
         }
-        div {
-            margin: 0px;
-            padding: 0px;
+        
+        /* Header */
+        .header {
+            background: #fff;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
         }
-        h2 {
-            margin: 0px;
-            padding: 0px;
-            color: #16777a;
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
         }
+        
+        h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #2c3e50;
+            text-align: center;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-top: 0.5rem;
+            font-size: 1rem;
+        }
+        
+        /* Messages d'alerte */
+        .alert {
+            background: #e8f5e8;
+            color: #2d5a2d;
+            padding: 1rem;
+            border-radius: 4px;
+            border-left: 4px solid #4caf50;
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Sections */
+        .section {
+            background: #fff;
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border: 1px solid #e0e0e0;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        /* Formulaires */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            align-items: end;
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
         label {
-            display: block;
-            margin-top: 10px;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: #555;
         }
-        input[type="number"] {
-            width: 50px;
+        
+        input[type="number"],
+        select {
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
-        button {
-            margin-top: 20px;
-            padding: 10px 15px;
-            background-color: #28a745;
-            color: white;
+        
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #2c3e50;
+            box-shadow: 0 0 0 2px rgba(44, 62, 80, 0.1);
+        }
+        
+        /* Boutons */
+        .btn {
+            padding: 0.75rem;
             border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: 500;
             cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: background-color 0.2s, transform 0.1s;
+            text-align: center;
         }
-        button:hover {
-            background-color: #218838;
+        
+        .btn:active {
+            transform: translateY(1px);
         }
+        
+        .btn-primary {
+            background: #2c3e50;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #34495e;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        /* Actions de labyrinthe */
+        .maze-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .maze-actions h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+        
+        /* Zone d'affichage du labyrinthe */
+        .maze-display {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .maze-container svg {
+            width: 100%;
+            height: auto;
+            max-width: 100vw;
+            max-height: 80vh;
+        }
+        
         #maze {
-            margin-top: 20px;
-            font-family: monospace;
+            font-family: 'Courier New', monospace;
             white-space: pre;
+            overflow-x: auto;
+            line-height: 1.2;
+            color: #2c3e50;
+            font-size: 14px;
+            background: white;
+            padding: 1rem;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        /* Section de téléchargement */
+        .download-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            align-items: end;
+        }
+        
+        /* ASCII Art placeholder */
+        .placeholder {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #6c757d;
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            margin: 2rem 0;
+        }
+        
+        .ascii-art {
+            font-family: monospace;
+            font-size: 0.8rem;
+            margin-bottom: 1rem;
+        }
+        
+        .placeholder-text {
+            font-size: 1rem;
+            margin-top: 1rem;
+        }
+        
+        /* Instructions */
+        .instructions {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .instructions h3 {
+            color: #495057;
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
+        }
+        
+        .instructions ul {
+            list-style-position: inside;
+            margin-bottom: 0.75rem;
+        }
+        
+        .instructions li {
+            margin-bottom: 0.25rem;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 2rem 0;
+            color: #6c757d;
+            font-size: 0.9rem;
+            border-top: 1px solid #e0e0e0;
+            margin-top: 3rem;
+            background: #fff;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 0.75rem;
+            }
+            
+            .section {
+                padding: 1.5rem;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .maze-actions {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 1rem;
+            }
+            
+            .action-buttons {
+                justify-content: center;
+            }
+            
+            .download-form {
+                grid-template-columns: 1fr;
+            }
+            
+            #maze {
+                font-size: 12px;
+                padding: 0.75rem;
+            }
+            
+            .ascii-art {
+                font-size: 0.7rem;
+            }
+            
+            h1 {
+                font-size: 1.75rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .section {
+                padding: 1rem;
+            }
+            
+            .maze-display {
+                padding: 1rem;
+            }
+            
+            #maze {
+                font-size: 10px;
+            }
+        }
+        
+        /* États de chargement */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        
+        /* Améliorations d'accessibilité */
+        .btn:focus {
+            outline: 2px solid #2c3e50;
+            outline-offset: 2px;
+        }
+        
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
         }
     </style>
 </head>
 <body>
-    {% if message %}
-    <div class="alert alert-success" role="alert">
-        {{ message }}
-    </div>
-    {% endif %}
-    <h1>Générateur aléatoire de labyrinthes</h1>
-    <div id="maze">
+    <header class="header">
+        <div class="container">
+            <h1>Générateur de Labyrinthes</h1>
+            <p class="subtitle">Créez et téléchargez des labyrinthes personnalisés</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Section de génération -->
+        <section class="section">
+            <h2 class="section-title">
+                Configuration du labyrinthe
+            </h2>
+            
+            <form action="/generate" method="POST">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="width">Largeur</label>
+                        <input type="number" 
+                               id="width" 
+                               name="width" 
+                               min="5" 
+                               max="100" 
+                               value="20" 
+                               required 
+                               aria-describedby="width-help">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="height">Hauteur</label>
+                        <input type="number" 
+                               id="height" 
+                               name="height" 
+                               min="5" 
+                               max="100" 
+                               value="20" 
+                               required 
+                               aria-describedby="height-help">
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary" aria-describedby="generate-help">
+                            Générer le labyrinthe
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </section>
+
         {% if maze %}
-        <h2>Labyrinthe généré :</h2>
-            <p>{{ maze }}</p>
-            {% if solved %}
-        <form action="/hide_answer" method="POST">
-            <button id="hide-solution" type="submit">Cacher la solution</button>
-            {% else %}
-        <form action="/show_answer" method="POST">
-            <button id="show-solution" type="submit">Afficher la solution</button>
-            {% endif %}
-        </form>
-        <form action="/download" method="POST">
-            <select name="download_content" id="download_content">
-                <option value="maze">Labyrinthe vierge</option>
-                <option selected="selected" value="maze_and_solution">Labyrinthe vierge et avec solution</option>
-                <option value="solution">labyrinthe avec solution uniquement</option>
-            </select>
-            <select name="download_type" id="download_type">
-                <option value="word">Document Word (.docx)</option>
-                <option selected="selected" value="pdf">Document PDF (.pdf)</option>
-            </select>
-            <button id="download" type="submit">Télécharger le labyrinthe</button>
-        </form>
+        <!-- Section d'affichage du labyrinthe -->
+        <section class="section">
+            <div class="maze-actions">
+                <h2>Votre labyrinthe</h2>
+                <div class="action-buttons">
+                    {% if solved %}
+                    <form action="/hide_answer" method="POST" style="display: inline;">
+                        <button type="submit" class="btn btn-secondary btn-small">
+                            🙈 Masquer la solution
+                        </button>
+                    </form>
+                    {% else %}
+                    <form action="/show_answer" method="POST" style="display: inline;">
+                        <button type="submit" class="btn btn-success btn-small">
+                            💡 Révéler la solution
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="maze-container">
+                {{ maze | safe }}
+            </div>
+        </section>
+
+        <!-- Section de téléchargement -->
+        <section class="section">
+            <h2 class="section-title">
+                Téléchargement
+            </h2>
+            
+            <form action="/download" method="POST">
+                <div class="download-form">
+                    <div class="form-group">
+                        <label for="download_content">Contenu à exporter</label>
+                        <select name="download_content" id="download_content" required>
+                            <option value="maze">Labyrinthe vierge uniquement</option>
+                            <option value="maze_and_solution" selected>Labyrinthe + solution</option>
+                            <option value="solution">Solution uniquement</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="download_type">Format de fichier</label>
+                        <select name="download_type" id="download_type" required>
+                            <option value="pdf" selected>PDF (.pdf)</option>
+                            <option value="word">Word (.docx)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-success">
+                            📄 Télécharger
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </section>
         {% else %}
-        <p> _    ___  ___  _ _  ___  _  _ _  ___  _ _  ___  ___
+        <!-- Placeholder quand aucun labyrinthe n'est généré -->
+        <div class="placeholder">
+            <div class="ascii-art">
+                <pre> _    ___  ___  _ _  ___  _  _ _  ___  _ _  ___  ___
 | |  | . || . >| | || . \| || \ ||_ _|| | || __>/ __>
 | |_ |   || . \\   /|   /| ||   | | | |   || _> \__ \
-|___||_|_||___/ |_| |_\_\|_||_\_| |_| |_|_||___><___/</p>
+|___||_|_||___/ |_| |_\_\|_||_\_| |_| |_|_||___><___/</pre>
+            </div>
+            <p class="placeholder-text">
+                Configurez les dimensions de votre labyrinthe ci-dessus et cliquez sur 
+                <strong>"Générer le labyrinthe"</strong> pour commencer.
+            </p>
+        </div>
         {% endif %}
-    </div>
-    <form action="/generate" method="POST">
-        <label for="width">Largeur :</label>
-        <input type="number" id="width" name="width" min="2" max="100" value="20" required>
-        <label for="height">Hauteur :</label>
-        <input type="number" id="height" name="height" min="2" max="100" value="20" required>
-        <button type="submit">Générer</button>
-    </form>
-</body>
 
+        <!-- Instructions d'utilisation -->
+        <section class="instructions">
+            <h3>Comment fonctionne ce générateur</h3>
+            <ul>
+                <li><strong>Dimensions :</strong> Choisissez la largeur et hauteur (5 à 100 cellules chacune)</li>
+                <li><strong>Génération :</strong> Le labyrinthe est créé avec un algorithme de fusion aléatoire</li>
+                <li><strong>Solution :</strong> Cliquez sur "Révéler la solution" pour voir l'itinéraire entre l'entrée et la sortie</li>
+                <li><strong>Export :</strong> Téléchargez en PDF ou Word selon vos besoins</li>
+                <li><strong>Entrée/Sortie :</strong> L'entrée est en haut à gauche, la sortie en bas à droite</li>
+            </ul>
+            <p><strong>Formats disponibles :</strong></p>
+            <ul>
+                <li><strong>PDF :</strong> Idéal pour l'impression et le partage</li>
+                <li><strong>Word :</strong> Permet la modification et l'intégration dans des documents</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>Générateur de Labyrinthes - Fait par Xavier Labarre - <a href="https://github.com/LabarreX/generateur-labyrinthe" target="_blank">GitHub</a></p>
+        </div>
+    </footer>
+
+    <script>
+        // Amélioration progressive : feedback visuel sur les formulaires
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function() {
+                const submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    const originalText = submitBtn.textContent;
+                    submitBtn.textContent = 'Traitement...';
+                }
+            });
+        });
+
+        // Validation côté client
+        document.getElementById('width').addEventListener('input', function() {
+            const value = parseInt(this.value);
+            if (value && (value < 5 || value > 100)) {
+                this.setCustomValidity('La largeur doit être comprise entre 5 et 100');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+
+        document.getElementById('height').addEventListener('input', function() {
+            const value = parseInt(this.value);
+            if (value && (value < 5 || value > 100)) {
+                this.setCustomValidity('La hauteur doit être comprise entre 5 et 100');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+    </script>
+</body>
 </html>
