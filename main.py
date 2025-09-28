@@ -1,6 +1,5 @@
 from flask import *
 from labyrinthe import Labyrinthe
-from tkinter.filedialog import asksaveasfilename
 
 app = Flask(__name__, template_folder="templates")
 
@@ -44,24 +43,48 @@ def download():
     if not labyrinthe:
         return redirect(url_for('index'))
 
-    if request.form['download_type'] == 'pdf':
-        if request.form['download_content'] == 'maze':
-            labyrinthe.generate_pdf(basic=True, with_solved=False)
-        elif request.form['download_content'] == 'maze_and_solution':
-            labyrinthe.generate_pdf(basic=True, with_solved=True)
-        elif request.form['download_content'] == 'solution':
-            labyrinthe.generate_pdf(basic=False, with_solved=True)
-    elif request.form['download_type'] == 'word':
-        if request.form['download_content'] == 'maze':
-            labyrinthe.generate_word(basic=True, with_solved=False)
-        elif request.form['download_content'] == 'maze_and_solution':
-            labyrinthe.generate_word(basic=True, with_solved=True)
-        elif request.form['download_content'] == 'solution':
-            labyrinthe.generate_word(basic=False, with_solved=True)
+    download_type = request.form['download_type']
+    download_content = request.form['download_content']
+    
+    # Déterminer les paramètres pour la génération
+    basic = download_content in ['maze', 'maze_and_solution']
+    with_solved = download_content in ['maze_and_solution', 'solution']
+    
+    # Générer le nom de fichier
+    if download_content == 'maze':
+        content_suffix = ""
+    elif download_content == 'maze_and_solution':
+        content_suffix = " avec solution"
+    else:  # solution
+        content_suffix = " résolu"
+    
+    if download_type == 'pdf':
+        # Générer le PDF en mémoire
+        pdf_data = labyrinthe.generate_pdf_bytes(basic=basic, with_solved=with_solved)
+        
+        filename = f'labyrinthe_{labyrinthe.largeur}x{labyrinthe.hauteur}{content_suffix}.pdf'
+        
+        # Créer la réponse avec le fichier PDF
+        response = make_response(pdf_data)
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+        
+    elif download_type == 'word':
+        # Générer le document Word en mémoire
+        word_data = labyrinthe.generate_word_bytes(basic=basic, with_solved=with_solved)
+        
+        filename = f'labyrinthe_{labyrinthe.largeur}x{labyrinthe.hauteur}{content_suffix}.docx'
+        
+        # Créer la réponse avec le fichier Word
+        response = make_response(word_data)
+        response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
 
-    return render_template('index.html', maze=labyrinthe.afficher(terminal=False), solved=False, message="Le fichier a été téléchargé avec succès.")
+    # Si on arrive ici, quelque chose s'est mal passé
+    return redirect(url_for('index'))
 
 
 if __name__ == '__main__':
-    app.run(debug=True,
-           port=3000)
+    app.run(debug=True, port=3000)
