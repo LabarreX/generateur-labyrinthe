@@ -6,10 +6,10 @@ from docx.oxml.ns import qn
 from docx.enum.section import WD_ORIENT
 from docx.enum.table import WD_ROW_HEIGHT_RULE
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
-from tkinter.filedialog import asksaveasfilename
 from reportlab.lib.pagesizes import landscape, A4
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import cm
+import io
 
 class Labyrinthe: # Classe représentant un labyrinthe
     def __init__(self, largeur, hauteur): # Initialise un labyrinthe fermé
@@ -190,7 +190,7 @@ class Labyrinthe: # Classe représentant un labyrinthe
         chemin.append((self.largeur, self.hauteur - 1))
         self.chemin = chemin
 
-    def generate_word(self, basic=True, with_solved=True): # Génère un document Word avec le labyrinthe
+    def generate_word_bytes(self, basic=True, with_solved=True): # Génère un document Word en mémoire et retourne les bytes
         def remove_border(cell, side): # Supprime la bordure spécifiée de la cellule
             """side: 'top','left','bottom','right' -> met val='nil' pour supprimer ce bord."""
             tc = cell._tc
@@ -315,26 +315,13 @@ class Labyrinthe: # Classe représentant un labyrinthe
                 document.add_page_break()
             draw_table(show_solution=True)
 
-        print("Document généré en mémoire. Pour l'enregistrer, si l'onglet ne s'affiche pas, réduire la fenêtre du terminal/IDE.")
-            
-        # sauvegarde
-        filename = asksaveasfilename(
-                defaultextension=".docx",
-                filetypes=[("Document Word", "*.docx")],
-                title="Enregistrer le document Word sous...",
-                initialfile=f'labyrinthe {self.largeur}x{self.hauteur}'
-                + (' avec solution' if with_solved and basic else ' résolu' if with_solved else '')+'.docx',
-                confirmoverwrite=True
-        )
-        if filename:
-            document.save(filename)
-            print("Document Word généré :", filename)
-        else:
-            print("Enregistrement annulé.")
+        # Sauvegarder en mémoire
+        file_stream = io.BytesIO()
+        document.save(file_stream)
+        file_stream.seek(0)
+        return file_stream.getvalue()
 
-        return document
-
-    def generate_pdf(self, basic=True, with_solved=True): # Génère un document PDF avec le labyrinthe
+    def generate_pdf_bytes(self, basic=True, with_solved=True): # Génère un document PDF en mémoire et retourne les bytes
         # dimensions PDF
         page_width, page_height = landscape(A4)
 
@@ -346,21 +333,9 @@ class Labyrinthe: # Classe représentant un labyrinthe
         # taille cellule
         cell_size = min((usable_w-100) / self.largeur, (usable_h-100) / self.hauteur)
 
-        print("Document en cours de génération. Si l'onglet d'enregistrement ne s'affiche pas, réduire la fenêtre du terminal/IDE.")
-
-        filename = asksaveasfilename(
-                defaultextension=".pdf",
-                filetypes=[("Fichier PDF", "*.pdf")],
-                title="Enregistrer le document PDF sous...",
-                initialfile=f'labyrinthe {self.largeur}x{self.hauteur}'
-                + (' avec solution' if with_solved and basic else ' résolu' if with_solved else '')+'.pdf',
-                confirmoverwrite=True
-        )
-        if not filename:
-            print("Enregistrement annulé.")
-            return None
-
-        c = canvas.Canvas(filename, pagesize=landscape(A4))
+        # Créer un buffer en mémoire
+        buffer = io.BytesIO()
+        c = canvas.Canvas(buffer, pagesize=landscape(A4))
         c.setFont("Courier-Bold", max(8, int(cell_size/ cm * 28)))
 
         c.setTitle(f'Labyrinthe {self.hauteur}x{self.largeur}' + (' avec solution' if with_solved and basic else ' résolu' if with_solved else ''))
@@ -448,8 +423,49 @@ class Labyrinthe: # Classe représentant un labyrinthe
             draw_maze(show_solution=True)
 
         c.save()
-        print("Document PDF généré :", filename)
-        return c
+        buffer.seek(0)
+        return buffer.getvalue()
+
+    # Garder les anciennes méthodes pour la compatibilité avec le script standalone
+    def generate_word(self, basic=True, with_solved=True):
+        from tkinter.filedialog import asksaveasfilename
+        document_bytes = self.generate_word_bytes(basic, with_solved)
+        
+        print("Document généré en mémoire. Pour l'enregistrer, si l'onglet ne s'affiche pas, réduire la fenêtre du terminal/IDE.")
+        filename = asksaveasfilename(
+            defaultextension=".docx",
+            filetypes=[("Document Word", "*.docx")],
+            title="Enregistrer le document Word sous...",
+            initialfile=f'labyrinthe {self.largeur}x{self.hauteur}'
+            + (' avec solution' if with_solved and basic else ' résolu' if with_solved else '')+'.docx',
+            confirmoverwrite=True
+        )
+        if filename:
+            with open(filename, 'wb') as f:
+                f.write(document_bytes)
+            print("Document Word généré :", filename)
+        else:
+            print("Enregistrement annulé.")
+
+    def generate_pdf(self, basic=True, with_solved=True):
+        from tkinter.filedialog import asksaveasfilename
+        pdf_bytes = self.generate_pdf_bytes(basic, with_solved)
+        
+        print("Document en cours de génération. Si l'onglet d'enregistrement ne s'affiche pas, réduire la fenêtre du terminal/IDE.")
+        filename = asksaveasfilename(
+            defaultextension=".pdf",
+            filetypes=[("Fichier PDF", "*.pdf")],
+            title="Enregistrer le document PDF sous...",
+            initialfile=f'labyrinthe {self.largeur}x{self.hauteur}'
+            + (' avec solution' if with_solved and basic else ' résolu' if with_solved else '')+'.pdf',
+            confirmoverwrite=True
+        )
+        if filename:
+            with open(filename, 'wb') as f:
+                f.write(pdf_bytes)
+            print("Document PDF généré :", filename)
+        else:
+            print("Enregistrement annulé.")
 
 if __name__ == "__main__":
     type = input("Type de génération (fusion/exploration) ? ").strip().lower()
