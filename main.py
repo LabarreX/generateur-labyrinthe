@@ -84,7 +84,3 @@ def download():
 
     # Si on arrive ici, quelque chose s'est mal passé
     return redirect(url_for('index'))
-
-
-if __name__ == '__main__':
-    app.run(debug=True, port=3000)
