@@ -1,4 +1,3 @@
 python-docx
-tkinter
 reportlab
 flask
