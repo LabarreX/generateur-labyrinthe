@@ -426,3 +426,64 @@ class Labyrinthe: # Classe représentant un labyrinthe
         buffer.seek(0)
         return buffer.getvalue()
 
+    def generate_svg(self, solved=False, width=600, height=600): # Génère un SVG du labyrinthe
+        cell_size = min(width / self.largeur, height / self.hauteur)
+        maze_width = self.largeur * cell_size
+        maze_height = self.hauteur * cell_size
+        
+        # Centrer le labyrinthe
+        offset_x = (width - maze_width) / 2 + 10
+        offset_y = (height - maze_height) / 2 + 10
+
+        svg_lines = []
+        svg_lines.append(f'<svg width="{width+20}" height="{height+20}" viewBox="0 0 {width+20} {height+20}" xmlns="http://www.w3.org/2000/svg">')
+        svg_lines.append('<style>')
+        svg_lines.append('.maze-wall { stroke: #2c3e50; stroke-width: 1; }')
+        svg_lines.append('.maze-path { stroke: #e74c3c; stroke-width: 3; stroke-linecap: round; fill: none; }')
+        svg_lines.append('.maze-bg { fill: #ffffff; }')
+        svg_lines.append('</style>')
+        
+        # Fond blanc
+        svg_lines.append(f'<rect x="{offset_x}" y="{offset_y}" width="{maze_width}" height="{maze_height}" class="maze-bg"/>')
+        
+        # Dessiner les murs
+        for y in range(self.hauteur):
+            for x in range(self.largeur):
+                cell = self.cells[y][x]
+                px = offset_x + x * cell_size
+                py = offset_y + y * cell_size
+
+                # Mur nord
+                if not cell['nord']:
+                    svg_lines.append(f'<line x1="{px}" y1="{py}" x2="{px + cell_size}" y2="{py}" class="maze-wall"/>')
+                
+                # Mur sud
+                if not cell['sud']:
+                    svg_lines.append(f'<line x1="{px}" y1="{py + cell_size}" x2="{px + cell_size}" y2="{py + cell_size}" class="maze-wall"/>')
+                
+                # Mur ouest
+                if not cell['ouest']:
+                    svg_lines.append(f'<line x1="{px}" y1="{py}" x2="{px}" y2="{py + cell_size}" class="maze-wall"/>')
+                
+                # Mur est
+                if not cell['est']:
+                    svg_lines.append(f'<line x1="{px + cell_size}" y1="{py}" x2="{px + cell_size}" y2="{py + cell_size}" class="maze-wall"/>')
+        
+        # Dessiner la solution si demandée
+        if solved and hasattr(self, 'chemin'):
+            path_coords = []
+            for i, (x, y) in enumerate(self.chemin):
+                # Ignorer les points virtuels d'entrée/sortie
+                if x == -1 or x == self.largeur or y == -1 or y == self.hauteur:
+                    continue
+
+                px = offset_x + x * cell_size + cell_size/2
+                py = offset_y + y * cell_size + cell_size/2
+                path_coords.append(f"{px},{py}")
+            
+            if path_coords:
+                path_string = "M " + " L ".join(path_coords)
+                svg_lines.append(f'<path d="{path_string}" class="maze-path"/>')
+        
+        svg_lines.append('</svg>')
+        return '\n'.join(svg_lines)
