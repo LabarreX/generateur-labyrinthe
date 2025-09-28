@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Générateur aléatoire de labyrinthes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        div {
+            margin: 0px;
+            padding: 0px;
+        }
+        h2 {
+            margin: 0px;
+            padding: 0px;
+            color: #16777a;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        input[type="number"] {
+            width: 50px;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        #maze {
+            margin-top: 20px;
+            font-family: monospace;
+            white-space: pre;
+        }
+    </style>
+</head>
+<body>
+    {% if message %}
+    <div class="alert alert-success" role="alert">
+        {{ message }}
+    </div>
+    {% endif %}
+    <h1>Générateur aléatoire de labyrinthes</h1>
+    <div id="maze">
+        {% if maze %}
+        <h2>Labyrinthe généré :</h2>
+            <p>{{ maze }}</p>
+            {% if solved %}
+        <form action="/hide_answer" method="POST">
+            <button id="hide-solution" type="submit">Cacher la solution</button>
+            {% else %}
+        <form action="/show_answer" method="POST">
+            <button id="show-solution" type="submit">Afficher la solution</button>
+            {% endif %}
+        </form>
+        <form action="/download" method="POST">
+            <select name="download_content" id="download_content">
+                <option value="maze">Labyrinthe vierge</option>
+                <option selected="selected" value="maze_and_solution">Labyrinthe vierge et avec solution</option>
+                <option value="solution">labyrinthe avec solution uniquement</option>
+            </select>
+            <select name="download_type" id="download_type">
+                <option value="word">Document Word (.docx)</option>
+                <option selected="selected" value="pdf">Document PDF (.pdf)</option>
+            </select>
+            <button id="download" type="submit">Télécharger le labyrinthe</button>
+        </form>
+        {% else %}
+        <p> _    ___  ___  _ _  ___  _  _ _  ___  _ _  ___  ___
+| |  | . || . >| | || . \| || \ ||_ _|| | || __>/ __>
+| |_ |   || . \\   /|   /| ||   | | | |   || _> \__ \
+|___||_|_||___/ |_| |_\_\|_||_\_| |_| |_|_||___><___/</p>
+        {% endif %}
+    </div>
+    <form action="/generate" method="POST">
+        <label for="width">Largeur :</label>
+        <input type="number" id="width" name="width" min="2" max="100" value="20" required>
+        <label for="height">Hauteur :</label>
+        <input type="number" id="height" name="height" min="2" max="100" value="20" required>
+        <button type="submit">Générer</button>
+    </form>
+</body>
+</html>
