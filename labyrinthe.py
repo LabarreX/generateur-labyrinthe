@@ -426,46 +426,6 @@ class Labyrinthe: # Classe représentant un labyrinthe
         buffer.seek(0)
         return buffer.getvalue()
 
-    # Garder les anciennes méthodes pour la compatibilité avec le script standalone
-    def generate_word(self, basic=True, with_solved=True):
-        from tkinter.filedialog import asksaveasfilename
-        document_bytes = self.generate_word_bytes(basic, with_solved)
-        
-        print("Document généré en mémoire. Pour l'enregistrer, si l'onglet ne s'affiche pas, réduire la fenêtre du terminal/IDE.")
-        filename = asksaveasfilename(
-            defaultextension=".docx",
-            filetypes=[("Document Word", "*.docx")],
-            title="Enregistrer le document Word sous...",
-            initialfile=f'labyrinthe {self.largeur}x{self.hauteur}'
-            + (' avec solution' if with_solved and basic else ' résolu' if with_solved else '')+'.docx',
-            confirmoverwrite=True
-        )
-        if filename:
-            with open(filename, 'wb') as f:
-                f.write(document_bytes)
-            print("Document Word généré :", filename)
-        else:
-            print("Enregistrement annulé.")
-
-    def generate_pdf(self, basic=True, with_solved=True):
-        from tkinter.filedialog import asksaveasfilename
-        pdf_bytes = self.generate_pdf_bytes(basic, with_solved)
-        
-        print("Document en cours de génération. Si l'onglet d'enregistrement ne s'affiche pas, réduire la fenêtre du terminal/IDE.")
-        filename = asksaveasfilename(
-            defaultextension=".pdf",
-            filetypes=[("Fichier PDF", "*.pdf")],
-            title="Enregistrer le document PDF sous...",
-            initialfile=f'labyrinthe {self.largeur}x{self.hauteur}'
-            + (' avec solution' if with_solved and basic else ' résolu' if with_solved else '')+'.pdf',
-            confirmoverwrite=True
-        )
-        if filename:
-            with open(filename, 'wb') as f:
-                f.write(pdf_bytes)
-            print("Document PDF généré :", filename)
-        else:
-            print("Enregistrement annulé.")
 
 if __name__ == "__main__":
     type = input("Type de génération (fusion/exploration) ? ").strip().lower()
