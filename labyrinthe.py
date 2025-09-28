@@ -426,39 +426,3 @@ class Labyrinthe: # Classe représentant un labyrinthe
         buffer.seek(0)
         return buffer.getvalue()
 
-
-if __name__ == "__main__":
-    type = input("Type de génération (fusion/exploration) ? ").strip().lower()
-    taille = input("Taille du labyrinthe (largeur,hauteur) ? ").strip()
-    if ',' in taille:
-        largeur, hauteur = map(int, taille.split(','))
-        largeur, hauteur = max(hauteur, largeur), min(largeur, hauteur)
-    else:
-        largeur = hauteur = int(taille)
-    laby = Labyrinthe(largeur, hauteur)
-    if type == "fusion":
-        laby.generer_fusion()
-    elif type == "exploration":
-        laby.generer_exploration()
-    laby.solve()
-    if input("Générer un document Word ? (o/n) ").strip().lower() == 'o':
-        type_doc = input("Entrer 's' pour le labyrinthe non résolu, 'r' pour le labyrinthe résolu, 'sr' pour les deux :").strip().lower()
-        if type_doc == 's':
-            laby.generate_word(basic=True, with_solved=False)
-        elif type_doc == 'r':
-            laby.generate_word(basic=False, with_solved=True)
-        else:
-            laby.generate_word(basic=True, with_solved=True)
-    if input("Générer un document PDF ? (o/n) ").strip().lower() == 'o':
-        type_doc = input("Entrer 's' pour le labyrinthe non résolu, 'r' pour le labyrinthe résolu, 'sr' pour les deux :").strip().lower()
-        if type_doc == 's':
-            laby.generate_pdf(basic=True, with_solved=False)
-        elif type_doc == 'r':
-            laby.generate_pdf(basic=False, with_solved=True)
-        else:
-            laby.generate_pdf(basic=True, with_solved=True)
-    if input("Afficher le labyrinthe dans le terminal ? (o/n) ").strip().lower() == 'o':
-        laby.afficher(terminal=True)
-        input("Appuyez sur Entrée pour afficher la solution...")
-        laby.afficher(solved=True, terminal=True)
-    input("Appuyez sur Entrée pour quitter...")
