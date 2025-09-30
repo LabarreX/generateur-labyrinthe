@@ -50,6 +50,9 @@ def download():
     # Déterminer les paramètres pour la génération
     basic = download_content in ['maze', 'maze_and_solution']
     with_solved = download_content in ['maze_and_solution', 'solution']
+
+    if with_solved :
+        labyrinthe.solve()
     
     # Générer le nom de fichier
     if download_content == 'maze':
@@ -85,3 +88,4 @@ def download():
 
     # Si on arrive ici, quelque chose s'est mal passé
     return redirect(url_for('index'))
+
