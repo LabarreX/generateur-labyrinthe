@@ -11,6 +11,10 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.units import cm
 import io
 
+from docx.enum.table import WD_TABLE_ALIGNMENT, WD_ALIGN_VERTICAL, WD_ROW_HEIGHT_RULE
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
+
 class Labyrinthe: # Classe représentant un labyrinthe
     def __init__(self, largeur, hauteur): # Initialise un labyrinthe fermé
         self.largeur = largeur
@@ -190,7 +194,7 @@ class Labyrinthe: # Classe représentant un labyrinthe
         chemin.append((self.largeur, self.hauteur - 1))
         self.chemin = chemin
 
-    def generate_word_bytes(self, basic=True, with_solved=True): # Génère un document Word en mémoire et retourne les bytes
+    def generate_word_bytes(self, basic=True, with_solved=True):  
         def remove_border(cell, side): # Supprime la bordure spécifiée de la cellule
             """side: 'top','left','bottom','right' -> met val='nil' pour supprimer ce bord."""
             tc = cell._tc
@@ -203,70 +207,63 @@ class Labyrinthe: # Classe représentant un labyrinthe
             el.set(qn('w:val'), 'nil')
             tcBorders.append(el)
 
-        document = Document() # Crée un nouveau document Word
+        document = Document()
 
+        # orientation auto
         section = document.sections[-1]
-        section.orientation = WD_ORIENT.LANDSCAPE # Paysage
-        section.page_width, section.page_height = section.page_height, section.page_width
+        if self.largeur > self.hauteur:
+            section.orientation = WD_ORIENT.LANDSCAPE
+            section.page_width, section.page_height = section.page_height, section.page_width
 
-        document.add_heading(  # Titre
+        # marges fixes
+        section.left_margin = Cm(1)
+        section.right_margin = Cm(1)
+        section.top_margin = Cm(1)
+        section.bottom_margin = Cm(1)
+
+        # titre
+        heading = document.add_heading(
             f'Labyrinthe {self.hauteur}×{self.largeur}'
-            + (' avec solution' if with_solved and basic else ' résolu' if with_solved else ''), 0
+            + (' avec solution' if with_solved and basic else ' résolu' if with_solved else ''),
+            0
         )
+        heading.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
-        # calcul surface utile (EMU -> cm)
-        pw_emu = int(section.page_width)
-        ph_emu = int(section.page_height)
-        left_emu = int(section.left_margin)*2
-        right_emu = int(section.right_margin)*2
-        top_emu = int(section.top_margin)*2
-        bottom_emu = int(section.bottom_margin)*2
+        # calcul surface utile en cm
+        usable_w_cm = (section.page_width.cm - section.left_margin.cm - section.right_margin.cm)
+        usable_h_cm = (section.page_height.cm - section.top_margin.cm - section.bottom_margin.cm)
 
-        usable_w_cm = (pw_emu - left_emu - right_emu) / 360000.0
-        usable_h_cm = (ph_emu - top_emu - bottom_emu) / 360000.0
-
-        # taille maximale carrée par cellule en cm
+        # taille maximale par cellule en cm
         cell_size_cm = min(usable_w_cm / self.largeur, usable_h_cm / self.hauteur)
         if cell_size_cm <= 0:
             cell_size_cm = 1.0
 
-        def symbol_for_cell(x, y): # Détermine le symbole à afficher dans une cellule donnée pour la solution
+        def symbol_for_cell(x, y):
             chemin = getattr(self, 'chemin', [])
             if (x, y) not in chemin:
                 return None
             i = chemin.index((x, y))
-            prev = chemin[i-1] if i > 0 else None               # Déterminer le trajet sur cette cellule
+            prev = chemin[i-1] if i > 0 else None
             nxt = chemin[i+1] if i < len(chemin)-1 else None
             d1 = (prev[0] - x, prev[1] - y) if prev else None
             d2 = (nxt[0] - x, nxt[1] - y) if nxt else None
-
-            # si un seul côté (début/fin)
             if d1 is None and d2:
                 return '━' if d2 in [(-1,0),(1,0)] else '┃'
             if d2 is None and d1:
                 return '━' if d1 in [(-1,0),(1,0)] else '┃'
-
-            # lignes droites
             s = {d1, d2}
-            if s <= {(-1,0),(1,0)}:
-                return '━'
-            if s <= {(0,-1),(0,1)}:
-                return '┃'
-            # coins
-            if s == {(1,0),(0,1)}:
-                return '┏'
-            if s == {(-1,0),(0,1)}:
-                return '┓'
-            if s == {(1,0),(0,-1)}:
-                return '┗'
-            if s == {(-1,0),(0,-1)}:
-                return '┛'
-            # fallback
+            if s <= {(-1,0),(1,0)}: return '━'
+            if s <= {(0,-1),(0,1)}: return '┃'
+            if s == {(1,0),(0,1)}: return '┏'
+            if s == {(-1,0),(0,1)}: return '┓'
+            if s == {(1,0),(0,-1)}: return '┗'
+            if s == {(-1,0),(0,-1)}: return '┛'
             return '╋'
 
         def draw_table(show_solution=False): # Dessine le labyrinthe dans un tableau Word
             table = document.add_table(rows=self.hauteur, cols=self.largeur) # Crée un tableau
             table.style = 'Table Grid'
+            table.alignment = WD_TABLE_ALIGNMENT.CENTER
             table.autofit = False
 
             # colonnes
@@ -276,6 +273,7 @@ class Labyrinthe: # Classe représentant un labyrinthe
             # lignes / cellules
             for r_idx, row in enumerate(table.rows):
                 try:
+                    row.height_rule = WD_ROW_HEIGHT_RULE.EXACTLY
                     row.height = Cm(cell_size_cm)
                 except Exception:
                     pass  # row.height peut bugger ; Word le gèrera
@@ -305,23 +303,21 @@ class Labyrinthe: # Classe représentant un labyrinthe
                             run.font.size = Pt(max(8, int(cell_size_cm * 28)))
                             run.font.name = "Courier New"
 
-        # dessine la version sans solution
         if basic:
             draw_table(show_solution=False)
 
-        # version avec solution
         if with_solved:
             if basic:
                 document.add_page_break()
             draw_table(show_solution=True)
 
-        # Sauvegarder en mémoire
+        # Sauvegarde en mémoire
         file_stream = io.BytesIO()
         document.save(file_stream)
         file_stream.seek(0)
         return file_stream.getvalue()
 
-    def generate_pdf_bytes(self, basic=True, with_solved=True): # Génère un document PDF en mémoire et retourne les bytes
+    def generate_pdf_bytes(self, basic=True, with_solved=True):
         # dimensions PDF
         page_width, page_height = landscape(A4)
 
@@ -336,7 +332,7 @@ class Labyrinthe: # Classe représentant un labyrinthe
         # Créer un buffer en mémoire
         buffer = io.BytesIO()
         c = canvas.Canvas(buffer, pagesize=landscape(A4))
-        c.setFont("Courier-Bold", max(8, int(cell_size/ cm * 28)))
+        c.setFont("Helvetica", 12)
 
         c.setTitle(f'Labyrinthe {self.hauteur}x{self.largeur}' + (' avec solution' if with_solved and basic else ' résolu' if with_solved else ''))
         c.setAuthor("Générateur de Labyrinthe Python - Xavier Labarre - github.com/labarrex")
@@ -350,26 +346,23 @@ class Labyrinthe: # Classe représentant un labyrinthe
             elif with_solved and show_solution:
                 titre += " résolu"
 
-            # position du titre : un peu en dessous du bord haut
+            # titre en haut de page
             c.setFont("Helvetica-Bold", 30)
             c.drawCentredString(page_width/2, page_height - 2.3*cm, titre)
 
-            # calcul zone labyrinthe avec marges
+            # zone labyrinthe
             lab_w = self.largeur * cell_size
             lab_h = self.hauteur * cell_size
-
-            # centrer le labyrinthe dans la page
             offset_x = (page_width - lab_w) / 2
-            offset_y = (page_height - lab_h) / 2 - 1.1*cm  # léger abaissement
+            offset_y = (page_height - lab_h) / 2 - 1.1*cm
 
-            # dessin cellules
+            # murs
             for y in range(self.hauteur):
                 for x in range(self.largeur):
                     cell = self.cells[y][x]
                     px = offset_x + x*cell_size
-                    py = offset_y + (self.hauteur-1-y)*cell_size  # inversion Y
+                    py = offset_y + (self.hauteur-1-y)*cell_size
 
-                    # tracer murs
                     if not cell['nord']:
                         c.line(px, py+cell_size, px+cell_size, py+cell_size)
                     if not cell['sud']:
@@ -379,40 +372,26 @@ class Labyrinthe: # Classe représentant un labyrinthe
                     if not cell['est']:
                         c.line(px+cell_size, py, px+cell_size, py+cell_size)
 
-                    # solution
-                    if show_solution and hasattr(self, 'chemin'):
-                        if (x, y) in self.chemin:
-                            sym = symbol_for_cell(x, y)
-                            if sym:
-                                c.setFont("Courier-Bold", max(8, int(cell_size/cm*20)))
-                                c.drawCentredString(px+cell_size/2,
-                                                    py+cell_size/2 - 4,
-                                                    sym)
+            # solution en chemin vectoriel
+            if show_solution and hasattr(self, 'chemin') and self.chemin:
+                path = c.beginPath()
+                first = True
+                for (x, y) in self.chemin:
+                    if x < 0 or y < 0 or x >= self.largeur or y >= self.hauteur:
+                        continue
+                    cx = offset_x + x*cell_size + cell_size/2
+                    cy = offset_y + (self.hauteur-1-y)*cell_size + cell_size/2
+                    if first:
+                        path.moveTo(cx, cy)
+                        first = False
+                    else:
+                        path.lineTo(cx, cy)
+                if not first:
+                    c.setStrokeColorRGB(1, 0, 0)
+                    c.setLineWidth(2)
+                    c.drawPath(path)
 
-        def symbol_for_cell(x, y):
-            chemin = getattr(self, 'chemin', [])
-            if (x, y) not in chemin:
-                return None
-            i = chemin.index((x, y))
-            prev = chemin[i-1] if i > 0 else None
-            nxt = chemin[i+1] if i < len(chemin)-1 else None
-            d1 = (prev[0] - x, prev[1] - y) if prev else None
-            d2 = (nxt[0] - x, nxt[1] - y) if nxt else None
-
-            if d1 is None and d2:
-                return '━' if d2 in [(-1,0),(1,0)] else '┃'
-            if d2 is None and d1:
-                return '━' if d1 in [(-1,0),(1,0)] else '┃'
-            s = {d1, d2}
-            if s <= {(-1,0),(1,0)}: return '━'
-            if s <= {(0,-1),(0,1)}: return '┃'
-            if s == {(1,0),(0,1)}: return '┏'
-            if s == {(-1,0),(0,1)}: return '┓'
-            if s == {(1,0),(0,-1)}: return '┗'
-            if s == {(-1,0),(0,-1)}: return '┛'
-            return '╋'
-
-        # dessine version simple
+        # version simple
         if basic:
             draw_maze(show_solution=False)
 
@@ -425,6 +404,7 @@ class Labyrinthe: # Classe représentant un labyrinthe
         c.save()
         buffer.seek(0)
         return buffer.getvalue()
+
 
     def generate_svg(self, solved=False, width=600, height=600): # Génère un SVG du labyrinthe
         cell_size = min(width / self.largeur, height / self.hauteur)
