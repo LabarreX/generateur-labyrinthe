@@ -4,16 +4,12 @@ from docx.shared import Cm, Pt
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.enum.section import WD_ORIENT
-from docx.enum.table import WD_ROW_HEIGHT_RULE
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+from docx.enum.table import WD_TABLE_ALIGNMENT, WD_ROW_HEIGHT_RULE
 from reportlab.lib.pagesizes import landscape, A4
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import cm
 import io
-
-from docx.enum.table import WD_TABLE_ALIGNMENT, WD_ALIGN_VERTICAL, WD_ROW_HEIGHT_RULE
-from docx.oxml import OxmlElement
-from docx.oxml.ns import qn
 
 class Labyrinthe: # Classe représentant un labyrinthe
     def __init__(self, largeur, hauteur): # Initialise un labyrinthe fermé
@@ -467,3 +463,12 @@ class Labyrinthe: # Classe représentant un labyrinthe
         
         svg_lines.append('</svg>')
         return '\n'.join(svg_lines)
+
+    def generate_svg_bytes(self, solved=False, width=None, height=None):
+        # Générer le SVG en texte HTML
+        svg_html = self.generate_svg(solved=solved, width=width, height=height)
+        
+        # Convertir le texte en bytes (encodage UTF-8)
+        svg_bytes = svg_html.encode('utf-8')
+        
+        return svg_bytes
