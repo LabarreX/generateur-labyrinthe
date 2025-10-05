@@ -355,6 +355,16 @@
             white-space: nowrap;
             border: 0;
         }
+
+        a {
+            color: #2c3e50;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+            color: #1a1a1a;
+        }
     </style>
 </head>
 <body>
@@ -369,6 +379,7 @@
         <!-- Section de génération -->
         <section class="section">
             <h2 class="section-title">
+                <span>⚙️</span>
                 Configuration du labyrinthe
             </h2>
             
@@ -437,6 +448,7 @@
         <!-- Section de téléchargement -->
         <section class="section">
             <h2 class="section-title">
+                <span>💾</span>
                 Téléchargement
             </h2>
             
@@ -456,6 +468,7 @@
                         <select name="download_type" id="download_type" required>
                             <option value="pdf" selected>PDF (.pdf)</option>
                             <option value="word">Word (.docx)</option>
+                            <option value="svg">SVG (.svg)</option>
                         </select>
                     </div>
                     
@@ -490,24 +503,44 @@
                 <li><strong>Dimensions :</strong> Choisissez la largeur et hauteur (5 à 100 cellules chacune)</li>
                 <li><strong>Génération :</strong> Le labyrinthe est créé avec un algorithme de fusion aléatoire</li>
                 <li><strong>Solution :</strong> Cliquez sur "Révéler la solution" pour voir l'itinéraire entre l'entrée et la sortie</li>
-                <li><strong>Export :</strong> Téléchargez en PDF ou Word selon vos besoins</li>
+                <li><strong>Export :</strong> Téléchargez en PDF, Word ou SVG, selon vos besoins</li>
                 <li><strong>Entrée/Sortie :</strong> L'entrée est en haut à gauche, la sortie en bas à droite</li>
             </ul>
             <p><strong>Formats disponibles :</strong></p>
             <ul>
                 <li><strong>PDF :</strong> Idéal pour l'impression et le partage</li>
                 <li><strong>Word :</strong> Permet la modification et l'intégration dans des documents</li>
+                <li><strong>SVG :</strong> Format vectoriel pour une qualité optimale à toute échelle (en SVG, impossible de télécharger en même temps le labyrinthe vierge et la solution)</li>
             </ul>
         </section>
     </main>
 
     <footer class="footer">
         <div class="container">
-            <p>Générateur de Labyrinthes - Fait par Xavier Labarre - <a href="https://github.com/LabarreX/generateur-labyrinthe" target="_blank">GitHub</a></p>
+            <p>Générateur de Labyrinthes - Fait par Xavier Labarre - <a href="https://github.com/LabarreX/generateur-labyrinthe" target="_blank">Voir sur GitHub</a></p>
         </div>
     </footer>
 
     <script>
+        // Gérer l'interaction entre le format et le contenu
+        const downloadType = document.getElementById('download_type');
+        const downloadContent = document.getElementById('download_content');
+        const mazeAndSolutionOption = downloadContent.querySelector('option[value="maze_and_solution"]');
+        
+        downloadType.addEventListener('change', function() {
+            if (this.value === 'svg') {
+                // Désactiver l'option "Labyrinthe + solution"
+                mazeAndSolutionOption.disabled = true;
+                // Si cette option était sélectionnée, changer pour "Labyrinthe vierge"
+                if (downloadContent.value === 'maze_and_solution') {
+                    downloadContent.value = 'maze';
+                }
+            } else {
+                // Réactiver l'option pour les autres formats
+                mazeAndSolutionOption.disabled = false;
+            }
+        });
+
         // Amélioration progressive : feedback visuel sur les formulaires
         document.querySelectorAll('form').forEach(form => {
             form.addEventListener('submit', function() {
