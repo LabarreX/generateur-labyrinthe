@@ -50,9 +50,6 @@ def download():
     # Déterminer les paramètres pour la génération
     basic = download_content in ['maze', 'maze_and_solution']
     with_solved = download_content in ['maze_and_solution', 'solution']
-
-    if with_solved :
-        labyrinthe.solve()
     
     # Générer le nom de fichier
     if download_content == 'maze':
@@ -61,6 +58,9 @@ def download():
         content_suffix = " avec solution"
     else:  # solution
         content_suffix = " résolu"
+
+    if with_solved :
+        labyrinthe.solve()
     
     if download_type == 'pdf':
         # Générer le PDF en mémoire
@@ -85,7 +85,21 @@ def download():
         response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
+    
+    elif download_type == 'svg':
+        # Générer le SVG
+        svg_data = labyrinthe.generate_svg_bytes(basic=basic, solved=with_solved, width=labyrinthe.largeur*25, height=labyrinthe.hauteur*25)
+
+        filename = f'labyrinthe {labyrinthe.largeur}x{labyrinthe.hauteur}{content_suffix}.svg'
+
+        # Créer la réponse avec le fichier SVG
+        response = make_response(svg_data)
+        response.headers['Content-Type'] = 'image/svg+xml'
+        response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
 
     # Si on arrive ici, quelque chose s'est mal passé
     return redirect(url_for('index'))
 
+if __name__ == '__main__':
+    app.run(debug=True, port=3000)
