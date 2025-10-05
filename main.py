@@ -88,7 +88,7 @@ def download():
     
     elif download_type == 'svg':
         # Générer le SVG
-        svg_data = labyrinthe.generate_svg_bytes(basic=basic, solved=with_solved, width=labyrinthe.largeur*25, height=labyrinthe.hauteur*25)
+        svg_data = labyrinthe.generate_svg_bytes(solved=with_solved, width=labyrinthe.largeur*25, height=labyrinthe.hauteur*25)
 
         filename = f'labyrinthe {labyrinthe.largeur}x{labyrinthe.hauteur}{content_suffix}.svg'
 
