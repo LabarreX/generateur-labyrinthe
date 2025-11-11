@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Générateur de Labyrinthes</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #fafafa;
+            margin: 0;
+        }
+        
+        .header {
+            background: #fff;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #2c3e50;
+            text-align: center;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-top: 0.5rem;
+            font-size: 1rem;
+        }
+        
+        .section {
+            background: #fff;
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border: 1px solid #e0e0e0;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            align-items: end;
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: #555;
+        }
+        
+        input[type="number"],
+        select {
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            min-height: 44px;
+        }
+        
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #2c3e50;
+            box-shadow: 0 0 0 2px rgba(44, 62, 80, 0.1);
+        }
+        
+        .btn {
+            padding: 0.75rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            text-align: center;
+            min-height: 44px;
+        }
+        
+        .btn:active {
+            transform: translateY(1px);
+        }
+        
+        .btn-primary {
+            background: #2c3e50;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #34495e;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        .maze-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .maze-actions h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+        
+        .maze-container {
+            background: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .maze-container img {
+            max-width: 100%;
+            height: auto;
+            max-height: 400px;
+        }
+        
+        .download-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            align-items: end;
+        }
+        
+        .placeholder {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #6c757d;
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            margin: 2rem 0;
+        }
+        
+        .ascii-art {
+            font-family: monospace;
+            font-size: 0.8rem;
+            margin-bottom: 1rem;
+            overflow-x: auto;
+        }
+        
+        .placeholder-text {
+            font-size: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .instructions {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .instructions h3 {
+            color: #495057;
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
+        }
+        
+        .instructions ul {
+            list-style-position: inside;
+            margin-bottom: 0.75rem;
+        }
+        
+        .instructions li {
+            margin-bottom: 0.25rem;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 2rem 0;
+            color: #6c757d;
+            font-size: 0.9rem;
+            border-top: 1px solid #e0e0e0;
+            margin-top: 3rem;
+            background: #fff;
+        }
+
+        a {
+            color: #2c3e50;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+            color: #1a1a1a;
+        }
+
+        .hidden {
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 0.75rem;
+            }
+            
+            .section {
+                padding: 1.5rem;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            h1 {
+                font-size: 1.75rem;
+            }
+
+            .maze-actions {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .action-buttons {
+                width: 100%;
+                justify-content: flex-start;
+            }
+            
+            .download-form {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .btn {
+                width: 100%;
+            }
+
+            .section {
+                padding: 1rem;
+            }
+
+            .maze-container {
+                padding: 1rem;
+            }
+
+            .placeholder {
+                padding: 2rem 0.5rem;
+            }
+
+            .ascii-art {
+                font-size: 0.6rem;
+            }
+
+            .instructions {
+                padding: 1rem;
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1>Générateur de Labyrinthes</h1>
+            <p class="subtitle">Créez et téléchargez des labyrinthes personnalisés</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="section">
+            <h2 class="section-title">
+                <span>⚙️</span>
+                Configuration du labyrinthe
+            </h2>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="width">Largeur</label>
+                    <input type="number" id="width" min="5" max="100" value="20">
+                </div>
+                
+                <div class="form-group">
+                    <label for="height">Hauteur</label>
+                    <input type="number" id="height" min="5" max="100" value="20">
+                </div>
+                
+                <div class="form-group">
+                    <button class="btn btn-primary" onclick="generateMaze()">
+                        Générer le labyrinthe
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="mazeSection" class="section hidden">
+            <div class="maze-actions">
+                <h2>Votre labyrinthe</h2>
+                <div class="action-buttons">
+                    <button id="showSolutionBtn" class="btn btn-success" onclick="showSolution()">
+                        💡 Révéler la solution
+                    </button>
+                    <button id="hideSolutionBtn" class="btn btn-secondary hidden" onclick="hideSolution()">
+                        🙈 Masquer la solution
+                    </button>
+                </div>
+            </div>
+            
+            <div class="maze-container" id="mazeContainer"></div>
+        </section>
+
+        <section id="downloadSection" class="section hidden">
+            <h2 class="section-title">
+                <span>💾</span>
+                Téléchargement
+            </h2>
+            
+            <div class="download-form">
+                <div class="form-group">
+                    <label for="downloadContent">Contenu à exporter</label>
+                    <select id="downloadContent">
+                        <option value="maze">Labyrinthe vierge uniquement</option>
+                        <option value="maze_and_solution" selected>Labyrinthe + solution</option>
+                        <option value="solution">Solution uniquement</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="downloadType">Format de fichier</label>
+                    <select id="downloadType">
+                        <option value="pdf" selected>PDF (.pdf)</option>
+                        <option value="svg">SVG (.svg)</option>
+                        <option value="png">PNG (.png)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <button class="btn btn-success" onclick="downloadMaze()">
+                        📄 Télécharger
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <div id="placeholder" class="placeholder">
+            <div class="ascii-art">
+                <pre> __          ___      .______   ____    ____ .______       __  .__   __. .___________. __    __   _______     _______.
+|  |        /   \     |   _  \  \   \  /   / |   _  \     |  | |  \ |  | |           ||  |  |  | |   ____|   /       |
+|  |       /  ^  \    |  |_)  |  \   \/   /  |  |_)  |    |  | |   \|  | `---|  |----`|  |__|  | |  |__     |   (----`
+|  |      /  /_\  \   |   _  <    \_    _/   |      /     |  | |  . `  |     |  |     |   __   | |   __|     \   \    
+|  `----./  _____  \  |  |_)  |     |  |     |  |\  \----.|  | |  |\   |     |  |     |  |  |  | |  |____.----)   |   
+|_______/__/     \__\ |______/      |__|     | _| `._____||__| |__| \__|     |__|     |__|  |__| |_______|_______/    </pre>
+            </div>
+            <p class="placeholder-text">
+                Configurez les dimensions de votre labyrinthe ci-dessus et cliquez sur 
+                <strong>"Générer le labyrinthe"</strong> pour commencer.
+            </p>
+        </div>
+
+        <section class="instructions">
+            <h3>Comment fonctionne ce générateur</h3>
+            <ul>
+                <li><strong>Dimensions :</strong> Choisissez la largeur et hauteur (5 à 100 cellules chacune)</li>
+                <li><strong>Génération :</strong> Le labyrinthe est créé avec un algorithme de fusion aléatoire</li>
+                <li><strong>Solution :</strong> Cliquez sur "Révéler la solution" pour voir l'itinéraire entre l'entrée et la sortie</li>
+                <li><strong>Export :</strong> Téléchargez en PDF, SVG ou PNG selon vos besoins</li>
+                <li><strong>Entrée/Sortie :</strong> L'entrée est en haut à gauche, la sortie en bas à droite</li>
+            </ul>
+            <p><strong>Formats d'export</strong></p>
+            <ul>
+                <li><strong>PDF :</strong> Pratique pour l'impression et le partage, on peut télécharger dans le même document le labyrinthe vierge et sa solution</li>
+                <li><strong>SVG :</strong> Image vectorielle, haute qualité à toute échelle</li>
+                <li><strong>PNG :</strong> Image simple à utiliser</li>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>Générateur de Labyrinthes - Fait par Xavier LABARRE - Voir sur <a href="https://github.com/LabarreX/generateur-labyrinthe" target="_blank" rel="noopener noreferrer">GitHub</a></p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        let currentMaze = null;
+        let currentSolution = null;
+        let isSolutionVisible = false;
+
+        class Maze {
+            constructor(width, height) {
+                this.width = width;
+                this.height = height;
+                this.cells = [];
+                
+                for (let y = 0; y < height; y++) {
+                    this.cells[y] = [];
+                    for (let x = 0; x < width; x++) {
+                        this.cells[y][x] = {
+                            id: y * width + x,
+                            north: false,
+                            south: false,
+                            east: false,
+                            west: false
+                        };
+                    }
+                }
+            }
+
+            openWall(x1, y1, x2, y2) {
+                if (x1 === x2 && y1 === y2 + 1) {
+                    this.cells[y1][x1].north = true;
+                    this.cells[y2][x2].south = true;
+                } else if (x1 === x2 && y1 === y2 - 1) {
+                    this.cells[y1][x1].south = true;
+                    this.cells[y2][x2].north = true;
+                } else if (x1 === x2 + 1 && y1 === y2) {
+                    this.cells[y1][x1].west = true;
+                    this.cells[y2][x2].east = true;
+                } else if (x1 === x2 - 1 && y1 === y2) {
+                    this.cells[y1][x1].east = true;
+                    this.cells[y2][x2].west = true;
+                }
+            }
+
+            generate() {
+                while (true) {
+                    const x = Math.floor(Math.random() * this.width);
+                    const y = Math.floor(Math.random() * this.height);
+                    
+                    const directions = [];
+                    if (x > 0) directions.push([-1, 0]);
+                    if (x < this.width - 1) directions.push([1, 0]);
+                    if (y > 0) directions.push([0, -1]);
+                    if (y < this.height - 1) directions.push([0, 1]);
+                    
+                    if (directions.length === 0) continue;
+                    
+                    const [dx, dy] = directions[Math.floor(Math.random() * directions.length)];
+                    const x2 = x + dx;
+                    const y2 = y + dy;
+                    
+                    const id1 = this.cells[y][x].id;
+                    const id2 = this.cells[y2][x2].id;
+                    
+                    if (id1 !== id2) {
+                        this.openWall(x, y, x2, y2);
+                        const oldId = Math.max(id1, id2);
+                        const newId = Math.min(id1, id2);
+                        
+                        for (let row of this.cells) {
+                            for (let cell of row) {
+                                if (cell.id === oldId) {
+                                    cell.id = newId;
+                                }
+                            }
+                        }
+                    }
+                    
+                    const firstId = this.cells[0][0].id;
+                    let allSame = true;
+                    for (let row of this.cells) {
+                        for (let cell of row) {
+                            if (cell.id !== firstId) {
+                                allSame = false;
+                                break;
+                            }
+                        }
+                        if (!allSame) break;
+                    }
+                    
+                    if (allSame) break;
+                }
+                
+                this.cells[0][0].west = true;
+                this.cells[this.height - 1][this.width - 1].east = true;
+            }
+
+            solve() {
+                const start = [0, 0];
+                const end = [this.width - 1, this.height - 1];
+                const stack = [start];
+                const visited = new Set(['0,0']);
+                const parent = new Map();
+                parent.set('0,0', null);
+
+                while (stack.length > 0) {
+                    const [x, y] = stack.pop();
+                    
+                    if (x === end[0] && y === end[1]) break;
+                    
+                    const directions = [];
+                    if (x > 0 && this.cells[y][x].west && !visited.has(`${x-1},${y}`)) {
+                        directions.push([-1, 0]);
+                    }
+                    if (x < this.width - 1 && this.cells[y][x].east && !visited.has(`${x+1},${y}`)) {
+                        directions.push([1, 0]);
+                    }
+                    if (y > 0 && this.cells[y][x].north && !visited.has(`${x},${y-1}`)) {
+                        directions.push([0, -1]);
+                    }
+                    if (y < this.height - 1 && this.cells[y][x].south && !visited.has(`${x},${y+1}`)) {
+                        directions.push([0, 1]);
+                    }
+
+                    for (const [dx, dy] of directions) {
+                        const x2 = x + dx;
+                        const y2 = y + dy;
+                        const key = `${x2},${y2}`;
+                        
+                        if (!visited.has(key)) {
+                            stack.push([x2, y2]);
+                            visited.add(key);
+                            parent.set(key, [x, y]);
+                        }
+                    }
+                }
+
+                const path = [];
+                let current = end;
+                while (current) {
+                    path.unshift(current);
+                    current = parent.get(`${current[0]},${current[1]}`);
+                }
+                
+                return path;
+            }
+
+            toSVG(showSolution = false, width = 600, height = 600) {
+                const cellSize = Math.min(width / this.width, height / this.height);
+                const mazeWidth = this.width * cellSize;
+                const mazeHeight = this.height * cellSize;
+                const offsetX = (width - mazeWidth) / 2 + 10;
+                const offsetY = (height - mazeHeight) / 2 + 10;
+                const viewBoxWidth = width + 20;
+                const viewBoxHeight = height + 20;
+
+                let svg = `<svg width="${viewBoxWidth}" height="${viewBoxHeight}" viewBox="0 0 ${viewBoxWidth} ${viewBoxHeight}" xmlns="http://www.w3.org/2000/svg">`;
+                svg += '<style>';
+                svg += '.maze-wall { stroke: #2c3e50; stroke-width: 1; vector-effect: non-scaling-stroke; }';
+                svg += '.maze-path { stroke: #e74c3c; stroke-width: 3; vector-effect: non-scaling-stroke; stroke-linecap: round; fill: none; }';
+                svg += '.maze-bg { fill: #ffffff; }';
+                svg += '</style>';
+                
+                svg += `<rect x="${offsetX}" y="${offsetY}" width="${mazeWidth}" height="${mazeHeight}" class="maze-bg"/>`;
+                
+                for (let y = 0; y < this.height; y++) {
+                    for (let x = 0; x < this.width; x++) {
+                        const cell = this.cells[y][x];
+                        const px = offsetX + x * cellSize;
+                        const py = offsetY + y * cellSize;
+
+                        if (!cell.north) {
+                            svg += `<line x1="${px}" y1="${py}" x2="${px + cellSize}" y2="${py}" class="maze-wall"/>`;
+                        }
+                        if (!cell.south) {
+                            svg += `<line x1="${px}" y1="${py + cellSize}" x2="${px + cellSize}" y2="${py + cellSize}" class="maze-wall"/>`;
+                        }
+                        if (!cell.west) {
+                            svg += `<line x1="${px}" y1="${py}" x2="${px}" y2="${py + cellSize}" class="maze-wall"/>`;
+                        }
+                        if (!cell.east) {
+                            svg += `<line x1="${px + cellSize}" y1="${py}" x2="${px + cellSize}" y2="${py + cellSize}" class="maze-wall"/>`;
+                        }
+                    }
+                }
+
+                if (showSolution && currentSolution) {
+                    const pathCoords = [];
+                    for (const [x, y] of currentSolution) {
+                        const px = offsetX + x * cellSize + cellSize / 2;
+                        const py = offsetY + y * cellSize + cellSize / 2;
+                        pathCoords.push(`${px},${py}`);
+                    }
+                    
+                    if (pathCoords.length > 0) {
+                        const pathString = "M " + pathCoords.join(" L ");
+                        svg += `<path d="${pathString}" class="maze-path"/>`;
+                    }
+                }
+                
+                svg += '</svg>';
+                return svg;
+            }
+        }
+
+        function generateMaze() {
+            const width = parseInt(document.getElementById('width').value);
+            const height = parseInt(document.getElementById('height').value);
+            
+            if (width < 5 || width > 100 || height < 5 || height > 100) {
+                alert('Les dimensions doivent être entre 5 et 100');
+                return;
+            }
+
+            currentMaze = new Maze(width, height);
+            currentMaze.generate();
+            currentSolution = currentMaze.solve();
+            isSolutionVisible = false;
+
+            document.getElementById('placeholder').classList.add('hidden');
+            document.getElementById('mazeSection').classList.remove('hidden');
+            document.getElementById('downloadSection').classList.remove('hidden');
+            document.getElementById('showSolutionBtn').classList.remove('hidden');
+            document.getElementById('hideSolutionBtn').classList.add('hidden');
+
+            displayMaze(false);
+        }
+
+        function displayMaze(showSolution) {
+            const container = document.getElementById('mazeContainer');
+            container.innerHTML = '';
+
+            const maxSize = 1600;
+            let displayWidth, displayHeight;
+            const aspectRatio = currentMaze.height / currentMaze.width;
+            if (aspectRatio > 1) {
+                displayHeight = maxSize;
+                displayWidth = maxSize / aspectRatio;
+            } else {
+                displayWidth = maxSize;
+                displayHeight = maxSize * aspectRatio;
+            }
+
+            const svg = currentMaze.toSVG(showSolution, displayWidth, displayHeight);
+            svgToPngForDisplay(svg, container);
+        }
+
+        function svgToPngForDisplay(svgString, container) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0);
+                const pngUrl = canvas.toDataURL('image/png');
+                container.innerHTML = `<img src="${pngUrl}" alt="Labyrinthe" style="max-width: 100%; height: auto;">`;
+            };
+            const blob = new Blob([svgString], { type: 'image/svg+xml' });
+            img.src = URL.createObjectURL(blob);
+        }
+
+        function showSolution() {
+            isSolutionVisible = true;
+            document.getElementById('showSolutionBtn').classList.add('hidden');
+            document.getElementById('hideSolutionBtn').classList.remove('hidden');
+            displayMaze(true);
+        }
+
+        function hideSolution() {
+            isSolutionVisible = false;
+            document.getElementById('showSolutionBtn').classList.remove('hidden');
+            document.getElementById('hideSolutionBtn').classList.add('hidden');
+            displayMaze(false);
+        }
+
+        function downloadMaze() {
+            if (!currentMaze) return;
+
+            const content = document.getElementById('downloadContent').value;
+            const type = document.getElementById('downloadType').value;
+            
+            let suffix = '';
+            if (content === 'solution') suffix = ' résolu';
+            else if (content === 'maze_and_solution') suffix = ' avec solution';
+            
+            const filename = `labyrinthe ${currentMaze.width}x${currentMaze.height}${suffix}`;
+
+            if (type === 'pdf') {
+                generatePDF(content, filename);
+            } else if (type === 'svg') {
+                const showSolution = content === 'solution' || content === 'maze_and_solution';
+                const svg = currentMaze.toSVG(showSolution, currentMaze.width * 25, currentMaze.height * 25);
+                const blob = new Blob([svg], { type: 'image/svg+xml' });
+                downloadFile(blob, filename + '.svg');
+            } else if (type === 'png') {
+                const showSolution = content === 'solution' || content === 'maze_and_solution';
+                const svg = currentMaze.toSVG(showSolution, currentMaze.width * 25, currentMaze.height * 25);
+                svgToPng(svg, filename + '.png');
+            }
+        }
+
+        function generatePDF(content, filename) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({
+                orientation: currentMaze.width > currentMaze.height ? 'landscape' : 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+            const margin = 10;
+            const usableWidth = pageWidth - 2 * margin;
+            const usableHeight = pageHeight - 2 * margin - 20;
+
+            const cellSize = Math.min(usableWidth / currentMaze.width, usableHeight / currentMaze.height);
+            const mazeWidth = currentMaze.width * cellSize;
+            const mazeHeight = currentMaze.height * cellSize;
+            const offsetX = (pageWidth - mazeWidth) / 2;
+            const offsetY = (pageHeight - mazeHeight) / 2;
+
+            function drawMaze(showSolution) {
+                doc.setFontSize(20);
+                doc.setFont(undefined, 'bold');
+                let title = `Labyrinthe ${currentMaze.height}×${currentMaze.width}`;
+                if (content === 'maze_and_solution' && showSolution) {
+                    title += ' avec solution';
+                } else if (content === 'solution' && showSolution) {
+                    title += ' résolu';
+                }
+                doc.text(title, pageWidth / 2, 15, { align: 'center' });
+
+                doc.setLineWidth(0.3);
+                doc.setDrawColor(44, 62, 80);
+
+                for (let y = 0; y < currentMaze.height; y++) {
+                    for (let x = 0; x < currentMaze.width; x++) {
+                        const cell = currentMaze.cells[y][x];
+                        const px = offsetX + x * cellSize;
+                        const py = offsetY + y * cellSize;
+
+                        if (!cell.north) {
+                            doc.line(px, py, px + cellSize, py);
+                        }
+                        if (!cell.south) {
+                            doc.line(px, py + cellSize, px + cellSize, py + cellSize);
+                        }
+                        if (!cell.west) {
+                            doc.line(px, py, px, py + cellSize);
+                        }
+                        if (!cell.east) {
+                            doc.line(px + cellSize, py, px + cellSize, py + cellSize);
+                        }
+                    }
+                }
+
+                if (showSolution && currentSolution && currentSolution.length > 0) {
+                    doc.setDrawColor(231, 76, 60);
+                    doc.setLineWidth(0.8);
+
+                    for (let i = 0; i < currentSolution.length - 1; i++) {
+                        const [x1, y1] = currentSolution[i];
+                        const [x2, y2] = currentSolution[i + 1];
+                        
+                        const px1 = offsetX + x1 * cellSize + cellSize / 2;
+                        const py1 = offsetY + y1 * cellSize + cellSize / 2;
+                        const px2 = offsetX + x2 * cellSize + cellSize / 2;
+                        const py2 = offsetY + y2 * cellSize + cellSize / 2;
+                        
+                        doc.line(px1, py1, px2, py2);
+                    }
+                }
+            }
+
+            if (content === 'maze') {
+                drawMaze(false);
+            } else if (content === 'solution') {
+                drawMaze(true);
+            } else if (content === 'maze_and_solution') {
+                drawMaze(false);
+                doc.addPage();
+                drawMaze(true);
+            }
+
+            doc.save(filename + '.pdf');
+        }
+
+        function svgToPng(svgString, filename) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            
+            img.onload = function() {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0);
+                
+                canvas.toBlob(function(blob) {
+                    downloadFile(blob, filename);
+                });
+            };
+            
+            const blob = new Blob([svgString], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            img.src = url;
+        }
+
+        function downloadFile(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        document.getElementById('downloadType').addEventListener('change', function() {
+            const content = document.getElementById('downloadContent');
+            const option = content.querySelector('option[value="maze_and_solution"]');
+            
+            if (this.value === 'svg' || this.value === 'png') {
+                option.disabled = true;
+                if (content.value === 'maze_and_solution') {
+                    content.value = 'maze';
+                }
+            } else {
+                option.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
